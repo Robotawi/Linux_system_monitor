@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "linux_parser.h"
 
@@ -35,7 +36,7 @@ string LinuxParser::OperatingSystem()
           std::replace(value.begin(), value.end(), '_', ' ');
           return value;
         }
-        value = "NULL"; //to indicate an error state if it happens
+        value = "NULL"; // to indicate an error state if it happens
       }
     }
   }
@@ -85,7 +86,44 @@ vector<int> LinuxParser::Pids()
 }
 
 // TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+float LinuxParser::MemoryUtilization()
+{
+  float memTotal{0.0};
+  float memFree{0.0};
+  // float memAvailable{0.0};
+  // float memBuffers{0.0};
+
+  string line{""};
+  string key{""};
+  string value{""};
+
+  std::ifstream fstream(procDir + meminfoFile);
+  if (fstream.is_open())
+  {
+    while (getline(fstream, line))
+    {
+      std::replace(line.begin(), line.end(), ':', ' ');
+      std::istringstream stringstream(line);
+      while (stringstream >> key >> value)
+      {
+        if (key == "MemTotal")
+        {
+          memTotal = std::stof(value);
+          continue;
+        }
+        if (key == "MemFree")
+        {
+          memFree = std::stof(value);
+          break;
+        }
+      }
+    }
+    //after processing all lines. can be optimized? 
+    return (memTotal - memFree) / memTotal;
+  }
+
+  return -1.0;//to indicate a fault
+}
 
 // TODO: Read and return the system uptime
 long LinuxParser::UpTime() { return 0; }
