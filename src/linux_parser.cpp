@@ -14,28 +14,32 @@ using std::vector;
 // DONE: An example of how to read data from the filesystem
 string LinuxParser::OperatingSystem()
 {
-  string line;
-  string key;
-  string value;
-  std::ifstream filestream(osreleaseFile);
-  if (filestream.is_open())
-  {
-    while (std::getline(filestream, line))
+  string line{""};
+  string key{""};
+  string value{""};
+
+  std::ifstream fstream(osreleaseFile);
+  if (fstream.is_open())
+  { // multiline file
+    while (getline(fstream, line))
     {
       std::replace(line.begin(), line.end(), ' ', '_');
-      std::replace(line.begin(), line.end(), '=', ' ');
       std::replace(line.begin(), line.end(), '"', ' ');
-      std::istringstream linestream(line);
-      while (linestream >> key >> value)
+      std::replace(line.begin(), line.end(), '=', ' ');
+
+      std::istringstream stringstream(line);
+      while (stringstream >> key >> value)
       {
         if (key == "PRETTY_NAME")
         {
           std::replace(value.begin(), value.end(), '_', ' ');
           return value;
         }
+        value = "NULL"; //to indicate an error state if it happens
       }
     }
   }
+
   return value;
 }
 
