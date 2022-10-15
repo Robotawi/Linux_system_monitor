@@ -31,7 +31,7 @@ namespace LinuxParser
   int RunningProcesses();
   std::string OperatingSystem();
   std::string Kernel();
-  
+
   // CPU
   enum CPUStates
   {
@@ -59,6 +59,7 @@ namespace LinuxParser
   std::string Uid(int pid);
   std::string User(int pid);
   long int UpTime(int pid);
+  float CpuUtilization(int pid);
 }; // namespace LinuxParser
 
 #endif

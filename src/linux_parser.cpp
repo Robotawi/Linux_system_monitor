@@ -256,20 +256,23 @@ string LinuxParser::Command(int pid)
 // TODO: Read and return the memory used by a process
 // REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::Ram(int pid)
-{ 
-  string line{""}; 
+{
+  string line{""};
   string key{""};
   string value{""};
 
   std::ifstream proc_pid_status(procDir + to_string(pid) + statusFile);
-  if(proc_pid_status.is_open()){
-    while(getline(proc_pid_status, line)){
+  if (proc_pid_status.is_open())
+  {
+    while (getline(proc_pid_status, line))
+    {
       std::replace(line.begin(), line.end(), ':', ' ');
       std::istringstream stringstream(line);
-      stringstream >> key >> value; 
+      stringstream >> key >> value;
 
-      if (key == "VmSize"){
-        return to_string(std::stoi(value)/1000);
+      if (key == "VmSize")
+      {
+        return to_string(std::stoi(value) / 1000);
       }
     }
   }
@@ -291,14 +294,14 @@ long LinuxParser::UpTime(int pid)
 {
   string line{""};
   string startTime("");
-  int count = 0;
+  int count = 1;
   std::ifstream proc_pid_stat(procDir + to_string(pid) + statFile);
   if (proc_pid_stat.is_open())
   {
     std::getline(proc_pid_stat, line);
     std::istringstream stringstream(line);
 
-    while (count <= 21)
+    while (count <= 22)
     {
       stringstream >> startTime;
       count++;
@@ -306,4 +309,47 @@ long LinuxParser::UpTime(int pid)
   }
   // as we parsed the process start time, the process up time = system up time - process start time
   return UpTime() - std::stol(startTime) / sysconf(_SC_CLK_TCK);
+}
+
+float LinuxParser::CpuUtilization(int pid)
+{
+  // utilization = process active time / process up time
+  string line{""};
+  string data{""};
+  float utime{0.0};
+  float stime{0.0};
+  float cutime{0.0};
+  float cstime{0.0};
+  float active_time{0.0};
+  float total_time{0.0};
+
+  int count = 1;
+
+  std::ifstream proc_pid_stat(procDir + to_string(pid) + statFile);
+  if (proc_pid_stat.is_open())
+  {
+    getline(proc_pid_stat, line);
+    std::istringstream stringstream(line);
+
+    while (count <= 17)
+    {
+      stringstream >> data;
+      if (count == 14)
+        utime = std::stof(data);
+      else if (count == 15)
+        stime = std::stof(data);
+      else if (count == 16)
+        cutime = std::stof(data);
+      else if (count == 17)
+        cstime = std::stof(data);
+      else
+      {
+      }
+      count++;
+    }
+  }
+
+  active_time = utime + stime + cutime + cstime;
+  total_time = UpTime(pid);
+  return active_time / total_time;
 }
