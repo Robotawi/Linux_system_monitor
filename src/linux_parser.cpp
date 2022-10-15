@@ -156,7 +156,31 @@ long LinuxParser::ActiveJiffies() { return 0; }
 long LinuxParser::IdleJiffies() { return 0; }
 
 // TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+float LinuxParser::CpuUtilization()
+{
+  string line{""};
+  string cpu{""}; //place holder
+  string user{""}; // cpu time in user mode 
+  string nice{""}; // cpu time in low priority user mode 
+  string system{""}; // cpu time in system/kernel mode 
+  string idle{""}; // cpu time spent doing nothing
+
+  std::ifstream proc_stat_file(procDir + statFile);
+  if(proc_stat_file.is_open()){
+    getline(proc_stat_file, line);
+    std::istringstream stringstream(line); 
+    stringstream >> cpu >> user >> nice >> system >> idle; 
+  }
+
+  float total_time = std::stof(user) + std::stof(nice) + std::stof(system) + std::stof(idle);
+  float idle_time = std::stof(idle);
+  
+  //active time = 1 - fraction of idle time
+  return (1 - idle_time/total_time);
+
+  //TODO: capture inst change\
+  see this https://rosettacode.org/wiki/Linux_CPU_utilization 
+}
 
 // TODO: Read and return the total number of processes
 int LinuxParser::TotalProcesses()
@@ -169,13 +193,15 @@ int LinuxParser::TotalProcesses()
   std::ifstream filestream(procDir + statFile);
   if (filestream.is_open())
   {
-    while(getline(filestream, line)){
+    while (getline(filestream, line))
+    {
       std::istringstream stringstream(line);
-      stringstream >> key >> value; 
+      stringstream >> key >> value;
 
-      if(key == "processes"){
-        processes = std::stoi(value); 
-        return processes; 
+      if (key == "processes")
+      {
+        processes = std::stoi(value);
+        return processes;
       }
     }
   }
@@ -184,20 +210,24 @@ int LinuxParser::TotalProcesses()
 }
 
 // TODO: Read and return the number of running processes
-int LinuxParser::RunningProcesses() {
+int LinuxParser::RunningProcesses()
+{
 
   string line{""};
   string key{""};
   string value{""};
   int proc_running{0};
 
-  std::ifstream filestream(procDir+statFile);
-  if(filestream.is_open()){
-    while(getline(filestream, line)){
+  std::ifstream filestream(procDir + statFile);
+  if (filestream.is_open())
+  {
+    while (getline(filestream, line))
+    {
       std::istringstream stringstream(line);
       stringstream >> key >> value;
 
-      if(key == "procs_running"){
+      if (key == "procs_running")
+      {
         proc_running = std::stoi(value);
         return proc_running;
       }
