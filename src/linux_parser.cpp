@@ -118,15 +118,29 @@ float LinuxParser::MemoryUtilization()
         }
       }
     }
-    //after processing all lines. can be optimized? 
+    // after processing all lines. can be optimized?
     return (memTotal - memFree) / memTotal;
   }
 
-  return -1.0;//to indicate a fault
+  return -1.0; // to indicate a fault
 }
 
 // TODO: Read and return the system uptime
-long LinuxParser::UpTime() { return 0; }
+long LinuxParser::UpTime()
+{
+  string line{""};
+  string upTime{"0000"};
+
+  std::ifstream filestream(procDir + uptimeFile);
+  if (filestream.is_open())
+  {
+    getline(filestream, line);
+    std::istringstream stringstream(line);
+    stringstream >> upTime;
+  }
+
+  return std::stol(upTime);
+}
 
 // TODO: Read and return the number of jiffies for the system
 long LinuxParser::Jiffies() { return 0; }
