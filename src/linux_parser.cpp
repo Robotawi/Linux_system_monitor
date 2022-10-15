@@ -4,9 +4,11 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <array>
 
 #include "linux_parser.h"
 
+using std::array;
 using std::stof;
 using std::string;
 using std::to_string;
@@ -156,30 +158,31 @@ long LinuxParser::ActiveJiffies() { return 0; }
 long LinuxParser::IdleJiffies() { return 0; }
 
 // TODO: Read and return CPU utilization
-float LinuxParser::CpuUtilization()
+array<float, 2> LinuxParser::CpuUtilization()
 {
   string line{""};
-  string cpu{""}; //place holder
-  string user{""}; // cpu time in user mode 
-  string nice{""}; // cpu time in low priority user mode 
-  string system{""}; // cpu time in system/kernel mode 
-  string idle{""}; // cpu time spent doing nothing
+  string cpu{""};    // place holder
+  string user{""};   // cpu time in user mode
+  string nice{""};   // cpu time in low priority user mode
+  string system{""}; // cpu time in system/kernel mode
+  string idle{""};   // cpu time spent doing nothing
+  array<float, 2> cpuTimes{0.0, 0.0};
 
   std::ifstream proc_stat_file(procDir + statFile);
-  if(proc_stat_file.is_open()){
+  if (proc_stat_file.is_open())
+  {
     getline(proc_stat_file, line);
-    std::istringstream stringstream(line); 
-    stringstream >> cpu >> user >> nice >> system >> idle; 
+    std::istringstream stringstream(line);
+    stringstream >> cpu >> user >> nice >> system >> idle;
   }
 
-  float total_time = std::stof(user) + std::stof(nice) + std::stof(system) + std::stof(idle);
-  float idle_time = std::stof(idle);
-  
-  //active time = 1 - fraction of idle time
-  return (1 - idle_time/total_time);
+  float totalTime = std::stof(user) + std::stof(nice) + std::stof(system) + std::stof(idle);
+  float idleTime = std::stof(idle);
 
-  //TODO: capture inst change\
-  see this https://rosettacode.org/wiki/Linux_CPU_utilization 
+  cpuTimes.at(0) = totalTime;
+  cpuTimes.at(1) = idleTime;
+
+  return cpuTimes;
 }
 
 // TODO: Read and return the total number of processes
