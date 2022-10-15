@@ -4,7 +4,8 @@
 #include <fstream>
 #include <regex>
 #include <string>
-
+#include <vector>
+#include <array>
 // This is not a class, but a namespace. The reason is that there are no object/member level data that needs to be persisted within the parser.
 // It is a namespace within which different functions and constants are presented.
 
@@ -30,7 +31,7 @@ namespace LinuxParser
   int RunningProcesses();
   std::string OperatingSystem();
   std::string Kernel();
-
+  
   // CPU
   enum CPUStates
   {
@@ -45,7 +46,8 @@ namespace LinuxParser
     kGuest_,
     kGuestNice_
   };
-  float CpuUtilization();
+
+  std::array<float, 2> CpuUtilization();
   long Jiffies();
   long ActiveJiffies();
   long ActiveJiffies(int pid);
