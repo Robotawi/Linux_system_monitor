@@ -22,7 +22,18 @@ This UpTime() here can call the function with the same name in the LinuxParser n
 Processor &System::Cpu() { return cpu_; }
 
 // TODO: Return a container composed of the system's processes
-vector<Process> &System::Processes() { return processes_; }
+vector<Process> &System::Processes()
+{
+    pids_.clear();
+    processes_.clear();
+
+    pids_ = LinuxParser::Pids();
+    for (auto pid : pids_)
+    {
+        processes_.emplace_back(std::move(Process(pid)));
+    }
+    return processes_;
+}
 
 // TODO: Return the system's kernel identifier (string)
 std::string System::Kernel() { return LinuxParser::Kernel(); }
