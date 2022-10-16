@@ -3,7 +3,7 @@
 #include <set>
 #include <string>
 #include <vector>
-
+#include <algorithm>
 #include "process.h"
 #include "processor.h"
 #include "system.h"
@@ -32,6 +32,8 @@ vector<Process> &System::Processes()
     {
         processes_.emplace_back(std::move(Process(pid)));
     }
+
+    std::sort(processes_.begin(), processes_.end());
     return processes_;
 }
 
