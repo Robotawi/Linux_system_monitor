@@ -131,7 +131,8 @@ float LinuxParser::MemoryUtilization()
 long LinuxParser::UpTime()
 {
   string line{""};
-  string upTime{"0000"};
+  string upTime{"0"};
+  long upTimeSec{0};
 
   std::ifstream filestream(procDir + uptimeFile);
   if (filestream.is_open())
@@ -140,8 +141,17 @@ long LinuxParser::UpTime()
     std::istringstream stringstream(line);
     stringstream >> upTime;
   }
+  try
+  {
+    upTimeSec = std::stol(upTime);
+  }
+  catch (std::invalid_argument &e)
+  {
+    std::cout << e.what() << " - Uptime is << " << upTime << "\n";
+    upTimeSec = 0;
+  }
 
-  return std::stol(upTime);
+  return upTimeSec;
 }
 
 // TODO: Read and return the number of jiffies for the system
@@ -295,6 +305,8 @@ long LinuxParser::UpTime(int pid)
   string line{""};
   string startTime("");
   int count = 1;
+  long pUpTime{0};
+
   std::ifstream proc_pid_stat(procDir + to_string(pid) + statFile);
   if (proc_pid_stat.is_open())
   {
@@ -308,7 +320,19 @@ long LinuxParser::UpTime(int pid)
     }
   }
   // as we parsed the process start time, the process up time = system up time - process start time
-  return UpTime() - std::stol(startTime) / sysconf(_SC_CLK_TCK);
+  // need to try-catch because the process may end before its uptime is calculated, which mean\
+  the /proc/[pid]/stat file does not exist any more. 
+  try
+  {
+    pUpTime = UpTime() - std::stol(startTime) / sysconf(_SC_CLK_TCK);
+  }
+  catch (std::invalid_argument &e)
+  {
+    // std::cout << "The PID is "<< pid << "\n";
+    pUpTime = 0;
+  }
+
+  return pUpTime;
 }
 
 float LinuxParser::CpuUtilization(int pid)
@@ -349,7 +373,7 @@ float LinuxParser::CpuUtilization(int pid)
     }
   }
 
-  active_time = utime + stime + cutime + cstime;
+  active_time = (utime + stime + cutime + cstime) / sysconf(_SC_CLK_TCK);
   total_time = UpTime(pid);
   return active_time / total_time;
 }
